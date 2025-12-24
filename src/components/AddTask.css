@@ -1,0 +1,83 @@
+.task-layout {
+  background-color: white;
+  cursor: grab;
+  border-radius: 10px;
+  padding: 12px 15px;
+  min-width: 300px;
+  max-width: 300px;
+  overflow-wrap: break-word;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.task-layout:active {
+  cursor: grabbing;
+}
+
+.change-area {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.change-input {
+  height: 20px;
+  border-radius: 5px;
+  border-width: 1px;
+  border-color: #d1d5db;
+  background: #f3f4f6;
+  padding: 5px 0px 5px 13px;
+  font-size: 15px;
+  font-family: sour gummy;
+}
+
+.confirm-button {
+  width: 9%;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.confirm-image {
+  width: 100%;
+}
+
+.inner-layout {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.t {
+  width: 100%;
+}
+
+.t2 {
+  width: 100%;
+  display: flex;
+  justify-content: end;
+}
+
+.edit-button {
+  width: 17%;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.edit-image {
+  width: 100%;
+}
+
+.delete-button {
+  border: none;
+  background-color: transparent;
+  width: 17%;
+  cursor: pointer;
+}
+
+.delete-image {
+  width: 100%;
+}

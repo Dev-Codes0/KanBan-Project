@@ -1,0 +1,69 @@
+.task-position-layout {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: white;
+  box-shadow: 0 0px 8px black;
+}
+
+.name-on-task {
+  color: black;
+  font-size: 20px;
+  margin-left: 50px;
+}
+
+.create-task-button {
+  background-color: green;
+  color: white;
+  border: none;
+  font-size: 18px;
+  padding: 6px 10px;
+  cursor: pointer;
+  margin-right: 50px;
+  font-family: sour gummy;
+  background-color: #7b99ff;
+  border-radius: 10px;
+  transition: font-size 0.5s;
+}
+
+.create-task-button:hover {
+  font-size: 20px;
+}
+
+.popup-position-layout {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup-flex-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  width: 350px;
+  height: 120px;
+}
+
+.input-bar {
+  padding: 6px 13px;
+  margin-bottom: 15px;
+}
+
+.add-button,
+.close-button {
+  padding: 6px 13px;
+  margin-right: 10px;
+}

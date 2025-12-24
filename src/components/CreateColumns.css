@@ -1,0 +1,9 @@
+.colum-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background-color: #e3eef0;
+  align-items: center;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
