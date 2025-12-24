@@ -1,22 +1,14 @@
 import React, { useEffect, useState, type ReactNode } from "react";
 import {
   DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
+  useDraggable,
+  useDroppable,
   type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  arrayMove,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import editImage from "./assets/edit.png";
+import confirmImage from "./assets/confirmation.png";
+import deleteImage from "./assets/delete.png";
 import "./App.css";
 
 type CreateColumnsProps = {
@@ -27,6 +19,7 @@ type CreateColumnsProps = {
 type Task = {
   task: string;
   id: string;
+  status: string;
 };
 
 type TaskBarProps = {
@@ -36,52 +29,126 @@ type TaskBarProps = {
 
 type AddTaskProps = {
   task: Task[];
+  setTask: React.Dispatch<React.SetStateAction<Task[]>>;
 };
 
-type SortableItemProps = {
+type DroppableProps = {
   id: string;
   children: ReactNode;
 };
 
-function SortableItem({ id, children }: SortableItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
+type DraggleProps = {
+  children: ReactNode;
+  id: string;
+  status: string;
+};
 
+function Draggable({ children, id, status }: DraggleProps) {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id,
+    data: { type: status },
+  });
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: CSS.Translate.toString(transform),
   };
 
   return (
-    <div
-      className="task-layout"
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-    >
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes}>
       {children}
     </div>
   );
 }
 
+function Droppable({ id, children }: DroppableProps) {
+  const { setNodeRef } = useDroppable({
+    id,
+    data: {
+      accepts: ["stat-todo", "stat-prog", "stat-comp"],
+    },
+  });
+
+  return <div ref={setNodeRef}>{children}</div>;
+}
+
 function CreateColumns({ status, children }: CreateColumnsProps) {
   return (
     <div>
-      <p className="">{status}</p>
+      <p>{status}</p>
       <div className="colum-layout">{children}</div>
     </div>
   );
 }
 
-function AddTask({ task }: AddTaskProps) {
+function AddTask({ task, setTask }: AddTaskProps) {
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [newTask, setNewTask] = useState("");
+
+  function handleEditClick(id: string) {
+    setEditingId((prev) => (prev === id ? null : id));
+  }
+
+  function saveNewTask(event: React.ChangeEvent<HTMLInputElement>) {
+    setNewTask(event.target.value);
+  }
+
+  function passTask(taskId: string) {
+    setTask((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, task: newTask } : t)),
+    );
+    setEditingId(null);
+  }
+
+  function deleteTask(taskIdtoDelete: string) {
+    setTask((prev) => prev.filter((t) => t.id !== taskIdtoDelete));
+  }
+
   return (
     <>
       {task.map((data) => {
+        const isCheck = editingId === data.id;
+
         return (
-          <SortableItem key={data.id} id={data.id}>
-            {data.task}
-          </SortableItem>
+          <Draggable id={data.id} key={data.id} status={data.status}>
+            <div className="task-layout">
+              {isCheck ? (
+                <div className="change-area">
+                  <input
+                    className="change-input"
+                    onChange={saveNewTask}
+                    value={newTask}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  />
+                  <button
+                    className="confirm-button"
+                    onClick={() => passTask(data.id)}
+                    onPointerDown={(e) => e.stopPropagation()}
+                  >
+                    <img className="confirm-image" src={confirmImage} />
+                  </button>
+                </div>
+              ) : (
+                <div className="inner-layout">
+                  <div className="t">{data.task}</div>
+                  <div className="t2">
+                    <button
+                      onClick={() => handleEditClick(data.id)}
+                      onPointerDown={(e) => e.stopPropagation()}
+                      className="edit-button"
+                    >
+                      <img className="edit-image" src={editImage} />
+                    </button>
+                    <button
+                      className="delete-button"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={() => deleteTask(data.id)}
+                    >
+                      <img className="delete-image" src={deleteImage} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Draggable>
         );
       })}
     </>
@@ -102,6 +169,7 @@ function TaskBar({ task, setTask }: TaskBarProps) {
       {
         task: input,
         id: crypto.randomUUID(),
+        status: "stat-todo",
       },
     ]);
     setIsOpen(false);
@@ -175,55 +243,75 @@ function TaskBar({ task, setTask }: TaskBarProps) {
 
 function App() {
   const [task, setTask] = useState<Task[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const [progTask, setProgTask] = useState<Task[]>([
+    { id: "1", task: "do dishes", status: "stat-prog" },
+    { id: "2", task: "do makeup", status: "stat-prog" },
+  ]);
+  const [compTask, setCompTask] = useState<Task[]>([
+    { id: "4", task: "take out trash", status: "stat-comp" },
+    { id: "3", task: "book appointment", status: "stat-comp" },
+  ]);
 
-  function handleDragStart(event: DragStartEvent) {
-    const { active } = event;
-
-    setActiveId(active.id as string);
-  }
-
-  function handleDragEnd(event: DragEndEvent) {
+  function droppingShitLogic(event: DragEndEvent) {
     const { active, over } = event;
-    if (!over) return;
 
-    if (active.id !== over.id) {
-      setTask((items) => {
-        const oldIndex = items.findIndex((t) => t.id === active.id);
-        const newIndex = items.findIndex((t) => t.id === over.id);
+    if (
+      over &&
+      over.data.current?.accepts.includes(active.data.current?.type)
+    ) {
+      const activeId = active.id;
+      const dest = over.id;
 
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      const statusByColumn: Record<string, Task["status"]> = {
+        "todo-column": "stat-todo",
+        "prog-column": "stat-prog",
+        "comp-column": "stat-comp",
+      };
+
+      const nextStatus = statusByColumn[dest];
+
+      const item =
+        task.find((t) => t.id === activeId) ||
+        progTask.find((t) => t.id === activeId) ||
+        compTask.find((t) => t.id === activeId);
+
+      if (!item) return;
+
+      if (item.status === nextStatus) return;
+
+      const moved = { ...item, status: nextStatus };
+
+      setTask((prev) => prev.filter((t) => t.id !== activeId));
+      setProgTask((prev) => prev.filter((t) => t.id !== activeId));
+      setCompTask((prev) => prev.filter((t) => t.id !== activeId));
+
+      if (dest === "todo-column") setTask((prev) => [...prev, moved]);
+      if (dest === "prog-column") setProgTask((prev) => [...prev, moved]);
+      if (dest === "comp-column") setCompTask((prev) => [...prev, moved]);
     }
-
-    setActiveId(null);
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext onDragEnd={droppingShitLogic}>
       <div className="app-container">
         <div className="colums-grid-layout">
-          <CreateColumns status="TO DO">
-            <SortableContext
-              strategy={verticalListSortingStrategy}
-              items={task}
-            >
-              <AddTask task={task} />
-            </SortableContext>
-          </CreateColumns>
-          <CreateColumns status="IN PROGRESS" />
-          <CreateColumns status="COMPLETE" />
+          <Droppable id="todo-column">
+            <CreateColumns status="TO DO">
+              <AddTask task={task} setTask={setTask} />
+            </CreateColumns>
+          </Droppable>
+
+          <Droppable id="prog-column">
+            <CreateColumns status="IN PROGRESS">
+              <AddTask task={progTask} setTask={setProgTask} />
+            </CreateColumns>
+          </Droppable>
+
+          <Droppable id="comp-column">
+            <CreateColumns status="COMPLETE">
+              <AddTask task={compTask} setTask={setCompTask} />
+            </CreateColumns>
+          </Droppable>
         </div>
         <TaskBar task={task} setTask={setTask} />
       </div>
